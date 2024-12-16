@@ -248,3 +248,4 @@ fabric.properties
 # Propios
 .borradores
 borradores/
+.idea/inspectionProfiles/profiles_settings.xml
