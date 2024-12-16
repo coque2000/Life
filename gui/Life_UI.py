@@ -1,10 +1,13 @@
 import pygame
 import sys
 import time
-import random
+
+from model.Life import Life
+from util.Generar_Matriz import Matriz
+
 
 class Life_UI():
-    def __init__(self, matriz=None, escala: int = 2, retraso: float = 0):
+    def __init__(self, matriz=None, escala: int = 2, retraso: float = 0, life_game: Life = None):
         self._matriz =  matriz if matriz else []
         self._escala = escala
         self._retraso = retraso
@@ -20,14 +23,13 @@ class Life_UI():
         self._color_fondo = (0, 0, 0)  # Color de fondo de la ventana (negro)
         self._color_celda_iluminada = (100, 200, 255)  # Celda "encendida" (azul)
         self._color_celda_apagada = (0, 0, 0)  # Celda "apagada" (gris)
+        self._generacion = 0  # Generaciones
+        self._life_game = life_game if life_game else Life(matriz, 1)
 
         # Incializar interfaz
         pygame.init()
         self._pantalla = pygame.display.set_mode((self._width, self._height))
         pygame.display.set_caption(f"Life")
-        self._generacion = 0
-
-        # self.crear_interfaz()
 
     @property
     def matriz(self):
@@ -89,6 +91,14 @@ class Life_UI():
     def color_celda_apagada(self, color_celda_apagada):
         self._color_celda_apagada = color_celda_apagada
 
+    @property
+    def generacion(self):
+        return self._generacion
+
+    @generacion.setter
+    def generacion(self, generacion: int):
+        self._generacion = generacion
+
     def crear_interfaz(self):
         corriendo = True
         while corriendo:
@@ -99,13 +109,11 @@ class Life_UI():
             # Actualiza la matriz y redibuja la interfaz
             self._actualizar_estado()
             self._dibujar_interfaz()
-            time.sleep(self._retraso)  # Pausa para controlar la velocidad de actualización
-
+            time.sleep(self._retraso)  # Pausa para controlar la velocidad de actualizacion
         pygame.quit()
         sys.exit()
 
     def _dibujar_interfaz(self):
-        """Dibuja la interfaz gráfica según el estado actual de la matriz."""
         # Dibujar el fondo
         self._pantalla.fill(self._color_fondo)
         # Dibujar la cuadricula
@@ -132,23 +140,32 @@ class Life_UI():
             print(f"Coordenadas fuera de rango: ({fila}, {columna})")
 
     def _actualizar_estado(self):
-
+        """
         nueva_matriz = [[0 for _ in range(self._columnas)] for _ in range(self._filas)]
-
         for fila in range(self._filas):
             for columna in range(self._columnas):
-
-
                 # Implementar reglas aquí
                 # nueva_matriz[fila][columna] = self._matriz[fila][columna]  # Ejemplo
-
                 nueva_matriz[fila][columna] = random.randint(0, 1)
 
         self._generacion += 1
         self._matriz = nueva_matriz
+        """
+        if self._life_game.generacion == 0:
+            self._matriz = self._life_game.matriz_actual
+            self._life_game.generacion += 1
+            self._generacion = self._life_game.generacion
+        else:
+            if self._life_game.generacion < self._life_game.generaciones:
+                self._life_game.siguiente_generacion()
+                self._matriz = self._life_game.matriz_actual
+                self._generacion = self._life_game.generacion
+            else:
+                self._matriz = self._life_game.matriz_actual
 
 if __name__ == "__main__":
     # Matriz de ejemplo (0 = apagado, 1 = iluminado)
+    """
     matriz = [
         [0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         [1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
@@ -161,12 +178,17 @@ if __name__ == "__main__":
         [0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         [1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
     ]
+    """
+    matriz = Matriz.llenar_matriz(.55, 60, 100)
+    # Matriz.imprimir_matriz(matriz)
 
+    suma = 0
+    for fila in matriz:
+        for elemento in fila:
+            if elemento == 1:
+                suma += 1
+    print(f"suma: {suma}")
 
-    life = Life_UI(matriz=matriz, escala=80, retraso=0.1)
-    life.crear_interfaz()
-
-
-
-
-
+    life = Life(matriz=matriz, generaciones=10000)
+    life_ui = Life_UI(matriz=matriz, escala=10, retraso=20, life_game=life)
+    life_ui.crear_interfaz()
